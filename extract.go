@@ -20,7 +20,7 @@ func extractRec(rv valueInterface, path string) valueInterface {
 	if path == "" {
 		return rv
 	}
-	head, tail, leaf := Cut(path)
+	head, tail, leaf := CutKey(path)
 	if head == "" {
 		return nil
 	}

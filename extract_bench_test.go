@@ -44,7 +44,7 @@ func fallbackExtract(x any, path string) (any, error) {
 	if path == "" {
 		return v, nil
 	}
-	for head, tail, _ := Cut(path); ; head, tail, _ = Cut(tail) {
+	for head, tail, _ := CutKey(path); ; head, tail, _ = CutKey(tail) {
 		var t any
 		switch v := v.(type) {
 		case []any:

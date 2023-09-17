@@ -1,55 +1,22 @@
 package jsong
 
 import (
-	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 )
 
-const (
-	Sep  = rune('.')
-	Glob = rune('*')
-)
+const dot = rune('.')
 
-var (
-	ErrMaxDepth = errors.New("max depth reached")
-	ErrMaxIndex = errors.New("max index reached")
-)
+const reserved = ".*"
 
-type Limits struct {
-	MaxDepth int
-	MaxIndex int64
-}
+func quoteHint(k string) bool { return strings.HasPrefix(k, `"`) }
 
-func DefaultLimits() Limits {
-	return Limits{
-		MaxDepth: 6,
-		MaxIndex: 32,
+func CutKey(k string) (head any, tail string, leaf bool) {
+	if quoteHint(k) {
+		panic("CutKey: unquote is not implemented yet!")
 	}
-}
-
-func Each(k string, lim Limits, visitFn func(head any)) error {
-	for depth := 1; ; depth++ {
-		if lim.MaxDepth > 0 && lim.MaxDepth < depth {
-			return ErrMaxDepth
-		}
-		head, tail, leaf := Cut(k)
-		if i, ok := head.(int64); ok {
-			if lim.MaxIndex < i {
-				return ErrMaxIndex
-			}
-		}
-		visitFn(head)
-		if leaf {
-			break
-		}
-		k = tail
-	}
-	return nil
-}
-
-func Cut(k string) (head any, tail string, leaf bool) {
-	s, tail, found := strings.Cut(k, string(Sep))
+	s, tail, found := strings.Cut(k, string(dot))
 	leaf = !found
 	if i, ok := index(s); ok {
 		return i, tail, leaf
@@ -57,8 +24,8 @@ func Cut(k string) (head any, tail string, leaf bool) {
 	return s, tail, leaf
 }
 
-func Leaf(k string) bool {
-	return !strings.ContainsRune(k, Sep)
+func IsLeaf(k string) bool {
+	return !strings.ContainsRune(k, dot)
 }
 
 func indexHint(k string) bool {
@@ -72,4 +39,31 @@ func index(k string) (int64, bool) {
 		}
 	}
 	return 0, false
+}
+
+// JoinKey appends the key args to the base.
+//
+// Args should be either string or int64
+// or else JoinKey panics.
+func JoinKey(base string, as ...any) string {
+	var sb strings.Builder
+	sb.WriteString(base)
+	for i, a := range as {
+		if i > 0 || base != "" {
+			sb.WriteRune(dot)
+		}
+		switch a := a.(type) {
+		case int64:
+			fmt.Fprint(&sb, a)
+		case string:
+			if indexHint(a) || strings.ContainsAny(a, reserved) {
+				sb.WriteString(strconv.Quote(a))
+				continue
+			}
+			sb.WriteString(a)
+		default:
+			panic(fmt.Errorf("JoinKey: unexpected type in key at %T", a))
+		}
+	}
+	return sb.String()
 }

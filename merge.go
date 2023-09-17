@@ -14,7 +14,7 @@ func mergeRec(dst, src valueInterface, dstPath string) valueInterface {
 	if dstPath == "" {
 		return src
 	}
-	head, tail, leaf := Cut(dstPath)
+	head, tail, leaf := CutKey(dstPath)
 	if head == "" {
 		return dst
 	}
