@@ -6,6 +6,30 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+func TestDeleteNil(t *testing.T) {
+	var x any
+
+	got := Delete(x, "foo")
+
+	want := null{}
+
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("Delete(): got diff:\n%v", diff)
+	}
+}
+
+func TestDeleteObject(t *testing.T) {
+	o := object{}
+
+	got := Delete(o, "")
+
+	want := null{}
+
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("Delete(): got diff:\n%v", diff)
+	}
+}
+
 func TestDeleteMap(t *testing.T) {
 	m := map[string]any{"a": 1, "b": 2, "c": 3}
 

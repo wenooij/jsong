@@ -4,39 +4,21 @@ package jsong
 //
 // The empty path returns nil.
 func Delete(v any, path string) any {
-	if path == "" {
-		return nil
+	if path == "" || v == nil || v == (null{}) {
+		return null{}
 	}
-	var rv valueInterface
-	if x, ok := v.(valueInterface); ok {
-		rv = x
-	} else {
+	rv, ok := v.(valueInterface)
+	if !ok {
 		rv = ValueOf(v).(valueInterface)
 	}
-	return deleteRec(rv, path)
+	return deleteImpl(rv, path)
 }
 
-func deleteRec(rv valueInterface, path string) valueInterface {
-	head, tail, leaf := Cut(path)
-	if !leaf && tail == "" {
-		return nil
-	}
-	if leaf {
+func deleteImpl(rv valueInterface, path string) valueInterface {
+	if head, tail, leaf := CutKey(path); leaf {
 		rv.Delete(head)
-		return rv
-	}
-	next, ok := rv.Get(head)
-	if !ok {
-		return nil
-	}
-	if o, ok := rv.(object); ok {
-		o[head.(string)] = deleteRec(next, tail)
-		return o
-	}
-	if a, ok := rv.(array); ok {
-		if i := head.(int64); i < int64(len(a)) {
-			a[head.(int64)] = deleteRec(next, tail)
-		}
+	} else if next, ok := rv.Get(head); ok {
+		rv.Put(head, deleteImpl(next, tail))
 	}
 	return rv
 }
