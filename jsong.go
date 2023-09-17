@@ -109,6 +109,8 @@ func (a array) Get(k any) (valueInterface, bool) {
 	return nil, false
 }
 
+// Put puts the value v in the array index k.
+// Put panics if k's index is out of bounds.
 func (a array) Put(k any, v valueInterface) {
 	if i, ok := k.(int64); ok {
 		a[i] = v
@@ -140,7 +142,10 @@ func (a object) At(k string) valueInterface {
 func (a object) Get(k any) (valueInterface, bool) {
 	if k, ok := k.(string); ok {
 		v, ok := a[k]
-		return v.(valueInterface), ok
+		if !ok {
+			return nil, false
+		}
+		return v.(valueInterface), true
 	}
 	return nil, false
 }
