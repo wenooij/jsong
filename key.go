@@ -2,6 +2,7 @@ package jsong
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -66,4 +67,21 @@ func JoinKey(base string, as ...any) string {
 		}
 	}
 	return sb.String()
+}
+
+type KeyMatcher struct{ r *regexp.Regexp }
+
+func CompileKeyMatcher(glob string) (*KeyMatcher, error) {
+	glob = regexp.QuoteMeta(glob)
+	glob = strings.ReplaceAll(glob, `\*\*`, ".*")
+	glob = strings.ReplaceAll(glob, `\*`, "[^.]*")
+	r, err := regexp.Compile(fmt.Sprint("^", glob, "$"))
+	if err != nil {
+		return nil, err
+	}
+	return &KeyMatcher{r: r}, nil
+}
+
+func (m *KeyMatcher) MatchKey(k string) bool {
+	return m.r.MatchString(k)
 }

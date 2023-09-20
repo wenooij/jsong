@@ -25,3 +25,39 @@ func TestJoinKeyQuoteReserved(t *testing.T) {
 		t.Errorf("JoinKey(): got diff:\n%s", diff)
 	}
 }
+
+func TestCompileKeyMatcherLit(t *testing.T) {
+	m := Must(CompileKeyMatcher("a.b.c.d"))
+
+	got := m.r.String()
+
+	want := `^a\.b\.c\.d$`
+
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("CompileKeyMatcher(): got diff:\n%s", diff)
+	}
+}
+
+func TestCompileKeyMatcherStar(t *testing.T) {
+	m := Must(CompileKeyMatcher("a.*.c"))
+
+	got := m.r.String()
+
+	want := `^a\.[^.]*\.c$`
+
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("CompileKeyMatcher(): got diff:\n%s", diff)
+	}
+}
+
+func TestCompileKeyMatcherDoubleStar(t *testing.T) {
+	m := Must(CompileKeyMatcher("a.**.c"))
+
+	got := m.r.String()
+
+	want := `^a\..*\.c$`
+
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("CompileKeyMatcher(): got diff:\n%s", diff)
+	}
+}
