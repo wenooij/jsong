@@ -111,3 +111,21 @@ func TestGlobDoubleStarSuffixNestedMap(t *testing.T) {
 		t.Errorf("Glob(): got diff:\n%s", diff)
 	}
 }
+
+func TestGlobKeyMultipleEmbededStar(t *testing.T) {
+	v := []any{1, []any{1, []any{1, 2, 3}, 3}, 3}
+
+	got := GlobKey(v, "**.1.**")
+
+	want := []string{
+		"1.1",
+		"1.1.0",
+		"1.1.1",
+		"1.1.2",
+	}
+
+	lessFunc := func(a, b string) bool { return a < b }
+	if diff := cmp.Diff(want, got, cmpopts.SortSlices(lessFunc)); diff != "" {
+		t.Errorf("GlobKey(): got diff:\n%s", diff)
+	}
+}
