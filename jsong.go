@@ -12,11 +12,18 @@ type valueInterface interface {
 	Get(k any) (valueInterface, bool)
 	Put(k any, v valueInterface)
 	Delete(k any)
-	Each(func(k any) bool)
+	Each(func(k, v any) bool)
 	compare(other valueInterface) int
 }
 
-func Must[T any](v T, ok bool) T {
+func Must[T any](v T, err error) T {
+	if err != nil {
+		panic(fmt.Errorf("assertion failed: %w", err))
+	}
+	return v
+}
+
+func MustOk[T any](v T, ok bool) T {
 	if !ok {
 		panic(fmt.Errorf("assertion failed on %T", v))
 	}
@@ -73,28 +80,28 @@ type null struct{}
 func (null) Get(k any) (valueInterface, bool) { return nil, false }
 func (null) Put(k any, v valueInterface)      {}
 func (null) Delete(k any)                     {}
-func (null) Each(func(any) bool)              {}
+func (null) Each(func(any, any) bool)         {}
 
 type boolean bool
 
 func (boolean) Get(k any) (valueInterface, bool) { return nil, false }
 func (boolean) Put(k any, v valueInterface)      {}
 func (boolean) Delete(k any)                     {}
-func (boolean) Each(func(any) bool)              {}
+func (boolean) Each(func(any, any) bool)         {}
 
 type num float64
 
 func (num) Get(k any) (valueInterface, bool) { return nil, false }
 func (num) Put(k any, v valueInterface)      {}
 func (num) Delete(k any)                     {}
-func (num) Each(func(any) bool)              {}
+func (num) Each(func(any, any) bool)         {}
 
 type str string
 
 func (str) Get(k any) (valueInterface, bool) { return nil, false }
 func (str) Put(k any, v valueInterface)      {}
 func (str) Delete(k any)                     {}
-func (str) Each(func(any) bool)              {}
+func (str) Each(func(any, any) bool)         {}
 
 type array []any // []valueInterface
 
@@ -123,9 +130,9 @@ func (a array) Delete(k any) {
 	}
 }
 
-func (a array) Each(fn func(any) bool) {
-	for i := range a {
-		if !fn(int64(i)) {
+func (a array) Each(fn func(k, v any) bool) {
+	for i, e := range a {
+		if !fn(int64(i), e) {
 			break
 		}
 	}
@@ -162,9 +169,9 @@ func (a object) Delete(k any) {
 	}
 }
 
-func (a object) Each(fn func(any) bool) {
-	for k := range a {
-		if !fn(k) {
+func (a object) Each(fn func(k, v any) bool) {
+	for k, v := range a {
+		if !fn(k, v) {
 			break
 		}
 	}

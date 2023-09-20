@@ -173,7 +173,7 @@ type SumReducer struct {
 }
 
 func (a *SumReducer) Add(x any) {
-	a.sum += Must(Float64(x))
+	a.sum += MustOk(Float64(x))
 }
 
 type TrueCounter struct {
