@@ -85,6 +85,9 @@ func (e *encoder) encodePointer(v reflect.Value) valueInterface {
 		if _, ok := e.ptrSeen[ptr]; ok {
 			panic(fmt.Errorf("ValueOf: encountered a cycle via %s", v.Type()))
 		}
+		if e.ptrSeen == nil {
+			e.ptrSeen = make(map[any]struct{})
+		}
 		e.ptrSeen[ptr] = struct{}{}
 		defer func() { e.ptrLevel--; delete(e.ptrSeen, ptr) }()
 	}
@@ -107,6 +110,9 @@ func (e *encoder) encodeArray(v reflect.Value) valueInterface {
 		if _, ok := e.ptrSeen[ptr]; ok {
 			panic(fmt.Errorf("ValueOf: encountered a cycle via %s", v.Type()))
 		}
+		if e.ptrSeen == nil {
+			e.ptrSeen = make(map[any]struct{})
+		}
 		e.ptrSeen[ptr] = struct{}{}
 		defer func() { e.ptrLevel--; delete(e.ptrSeen, ptr) }()
 	}
@@ -128,6 +134,9 @@ func (e *encoder) encodeMap(v reflect.Value) valueInterface {
 		ptr := v.UnsafePointer()
 		if _, ok := e.ptrSeen[ptr]; ok {
 			panic(fmt.Errorf("ValueOf: encountered a cycle via %s", v.Type()))
+		}
+		if e.ptrSeen == nil {
+			e.ptrSeen = make(map[any]struct{})
 		}
 		e.ptrSeen[ptr] = struct{}{}
 		defer func() { e.ptrLevel--; delete(e.ptrSeen, ptr) }()
